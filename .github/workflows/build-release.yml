@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-deps:
-    runs-on: self-hosted  # ARM64 local vm (since we need tons more action minutes than github has!
+    runs-on: macos-15  # GitHub-hosted Apple Silicon runner
     outputs:
       cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
     
@@ -52,7 +52,7 @@ jobs:
 
   build:
     needs: build-deps
-    runs-on: self-hosted  # Your laptop!
+    runs-on: macos-15  # GitHub-hosted Apple Silicon runner
     
     steps:
       - name: Checkout code

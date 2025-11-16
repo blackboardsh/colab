@@ -1,6 +1,6 @@
 {
   "name": "colab",
-  "version": "0.3.22",
+  "version": "0.3.23-canary.0",
   "description": "A hybrid browser + code editor for deep work",
   "main": "index.js",
   "scripts": {

@@ -43,7 +43,7 @@
     "@xterm/addon-webgl": "^0.18.0",
     "@xterm/xterm": "^5.5.0",
     "ansi-to-html": "^0.7.2",
-    "electrobun": "0.1.14-beta.0",
+    "electrobun": "0.1.15-beta.0",
     "esbuild": "^0.25.12",
     "esbuild-monaco-editor-plugin": "^0.1.1",
     "esbuild-plugin-solid": "^0.5.0",

@@ -1217,9 +1217,80 @@ const createWindow = (workspaceId: string, window?: WindowConfigType) => {
           }
         },
         readFile: ({ path }) => {
-          // todo: make sure it's a text file, not binary, and rename this to readTextFile.
-          const contents = readFileSync(path, "utf-8");
-          return { textContent: contents };
+          try {
+            // Check if file exists and get size
+            const stats = statSync(path);
+            const fileSizeBytes = stats.size;
+
+            // Define limits
+            const MAX_INITIAL_LOAD_BYTES = 10 * 1024 * 1024; // 10MB
+            const BINARY_CHECK_BYTES = 8000; // Check first 8KB for binary content
+
+            // Read a sample to check if binary
+            const sampleBuffer = Buffer.alloc(Math.min(BINARY_CHECK_BYTES, fileSizeBytes));
+            const fd = require('fs').openSync(path, 'r');
+            require('fs').readSync(fd, sampleBuffer, 0, sampleBuffer.length, 0);
+            require('fs').closeSync(fd);
+
+            // Check for binary content (null bytes or high percentage of non-printable chars)
+            let nonPrintableCount = 0;
+            let nullByteFound = false;
+            for (let i = 0; i < sampleBuffer.length; i++) {
+              const byte = sampleBuffer[i];
+              if (byte === 0) {
+                nullByteFound = true;
+                break;
+              }
+              // Count non-printable characters (excluding common whitespace)
+              if (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13) {
+                nonPrintableCount++;
+              }
+            }
+
+            const nonPrintableRatio = nonPrintableCount / sampleBuffer.length;
+            const isBinary = nullByteFound || nonPrintableRatio > 0.3;
+
+            if (isBinary) {
+              return {
+                textContent: "",
+                isBinary: true,
+                totalBytes: fileSizeBytes,
+              };
+            }
+
+            // For text files, check if we need partial loading
+            if (fileSizeBytes > MAX_INITIAL_LOAD_BYTES) {
+              // Load only the first chunk
+              const partialBuffer = Buffer.alloc(MAX_INITIAL_LOAD_BYTES);
+              const fd = require('fs').openSync(path, 'r');
+              require('fs').readSync(fd, partialBuffer, 0, MAX_INITIAL_LOAD_BYTES, 0);
+              require('fs').closeSync(fd);
+
+              const partialContent = partialBuffer.toString('utf-8');
+
+              return {
+                textContent: partialContent,
+                isBinary: false,
+                loadedBytes: MAX_INITIAL_LOAD_BYTES,
+                totalBytes: fileSizeBytes,
+              };
+            }
+
+            // File is small enough, load it all
+            const contents = readFileSync(path, "utf-8");
+            return {
+              textContent: contents,
+              isBinary: false,
+              loadedBytes: fileSizeBytes,
+              totalBytes: fileSizeBytes,
+            };
+          } catch (err: any) {
+            console.error("Error reading file:", err);
+            return {
+              textContent: "",
+              error: err?.message || "Failed to read file",
+            };
+          }
         },
         writeFile: ({ path, value }) => {
           try {

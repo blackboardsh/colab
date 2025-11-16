@@ -178,14 +178,32 @@ const rpc = Electroview.defineRPC<WorkspaceRPC>({
 
           // update the monaco model with the new/updated contents
           if (isFile) {
-            if (stateFile?.type === "file") {
-              // todo (yoav): [blocking] look into this behaviour
+            if (stateFile?.type === "file" && stateFile.isCached) {
+              // Only fetch file contents if the file has been explicitly loaded by the user
               const currentContents =
                 stateFile.model?.getValue() || stateFile.persistedContent;
-              const { textContent: newContents } =
-                (await electrobun.rpc?.request.readFile({
-                  path: absolutePath,
-                })) || {};
+              const response = await electrobun.rpc?.request.readFile({
+                path: absolutePath,
+              });
+
+              if (!response) {
+                console.error('No response from readFile for:', absolutePath);
+                return;
+              }
+
+              const { textContent: newContents, isBinary, loadedBytes, totalBytes } = response;
+
+              console.log('Got file ', filename, ' with length: ', newContents?.length, 'isBinary:', isBinary);
+
+              // Handle binary files
+              if (isBinary) {
+                console.log('File is binary, not updating editors:', absolutePath);
+                setState("fileCache", absolutePath, {
+                  isBinary: true,
+                  totalBytes: totalBytes,
+                });
+                return;
+              }
 
               if (currentContents !== newContents) {
                 // Note: model.setValue() wipes out undo/redo history. to preserve it we need to do an edit operation instead
@@ -209,6 +227,8 @@ const rpc = Electroview.defineRPC<WorkspaceRPC>({
                 setState("fileCache", absolutePath, {
                   persistedContent: newContents,
                   isDirty: false,
+                  loadedBytes: loadedBytes,
+                  totalBytes: totalBytes,
                 });
               }
             }

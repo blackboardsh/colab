@@ -40,6 +40,14 @@ export interface FileNodeType {
   model: any;
   // keep track of all the open editors
   editors: { [editorId: string]: any };
+  // Track whether file contents have been loaded (vs just discovered via file watcher)
+  isCached?: boolean;
+  // Track if this is a binary file
+  isBinary?: boolean;
+  // Track how many bytes were loaded (if loadedBytes < totalBytes, it's partial)
+  loadedBytes?: number;
+  // Track total file size
+  totalBytes?: number;
 }
 
 export interface FolderNodeType {

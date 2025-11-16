@@ -171,6 +171,25 @@ const fileSlates = {
   },
 };
 
+// Template slates - cached to maintain object reference for reactivity
+const templateSlates = {
+  browser: {
+    v: 1,
+    name: "Browser",
+    type: "web" as const,
+    url: "https://blackboard.sh",
+    icon: "views://assets/file-icons/bookmark.svg",
+    config: {},
+  },
+  agent: {
+    v: 1,
+    name: "AI Chat",
+    type: "agent" as const,
+    icon: "views://assets/file-icons/agent.svg",
+    config: {},
+  },
+};
+
 // todo: - how much of this should be async via the backend vs. completely stored, and cached
 // on the backend.
 export const getSlateForNode = (
@@ -190,12 +209,28 @@ export const getSlateForNode = (
   if (node.path.startsWith("__COLAB_INTERNAL__")) {
     if (node.path === "__COLAB_INTERNAL__/web") {
       return {
+        v: 1,
         name: "Web",
         type: "web",
         url: "https://colab.dev",
         icon: "",
         config: {},
       };
+    }
+    return;
+  }
+
+  // Handle template nodes
+  if (node.path.startsWith("__COLAB_TEMPLATE__")) {
+    if (node.path === "__COLAB_TEMPLATE__/browser") {
+      return templateSlates.browser;
+    }
+    if (node.path === "__COLAB_TEMPLATE__/terminal") {
+      // Terminal tabs are handled differently - they don't use slates
+      return undefined;
+    }
+    if (node.path === "__COLAB_TEMPLATE__/agent") {
+      return templateSlates.agent;
     }
     return;
   }

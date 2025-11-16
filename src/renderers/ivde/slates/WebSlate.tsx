@@ -23,7 +23,7 @@ import { getWindow } from "../store";
 import { getSlateForNode } from "../files";
 
 import { type DomEventWithTarget } from "../../../shared/types/types";
-import { Show, createEffect, createSignal } from "solid-js";
+import { Show, createEffect, createSignal, createMemo } from "solid-js";
 import { electrobun } from "../init";
 
 import { join } from "../../utils/pathUtils";
@@ -94,8 +94,8 @@ export const WebSlate = ({
     webviewRef.src = initialUrl;
   };
 
-  const onClickDevTools = async () => {
-    if (!isRealNode || !node) {
+  const onCreatePreloadScript = async () => {
+    if (!isRealNode() || !node) {
       // For internal nodes or when node is undefined, just open devtools
       webviewRef?.openDevTools();
       return;
@@ -307,9 +307,9 @@ console.log('Preload script loaded for:', window.location.href);
   });
 
   const onClickAddBrowserProfile = async () => {
-    if (!isRealNode || !node) {
+    if (!isRealNode() || !node) {
       // Can't create browser profiles for internal nodes or when node is undefined
-      console.log("Cannot create browser profile: isRealNode=", isRealNode, "node=", node);
+      console.log("Cannot create browser profile: isRealNode=", isRealNode(), "node=", node);
       return;
     }
 
@@ -344,7 +344,7 @@ console.log('Preload script loaded for:', window.location.href);
       const slateConfig = {
         v: 1,
         name: pageTitle || new URL(currentUrl).hostname,
-        icon: "views:///assets/file-icons/browser-profile.svg",
+        icon: "views://assets/file-icons/bookmark.svg",
         type: "web",
         url: currentUrl,
         config: {},
@@ -394,7 +394,7 @@ console.log('Preload script loaded for:', window.location.href);
     } catch (error) {
       console.error("Error creating browser profile:", error);
       console.error("Debug info:", {
-        isRealNode,
+        isRealNode: isRealNode(),
         nodePath: node?.path,
         currentUrl,
         pageTitle: _tab?.type === "web" ? _tab.title : null,
@@ -413,27 +413,27 @@ console.log('Preload script loaded for:', window.location.href);
   // capturePage
   // showDefinitionForSelection
 
-  const isRealNode = node && !node.path.startsWith("__COLAB_INTERNAL__");
-  const preloadFilePath = isRealNode && node ? join(node.path, ".preload.js") : "";
+  const isRealNode = createMemo(() => node && !node.path.startsWith("__COLAB_INTERNAL__") && !node.path.startsWith("__COLAB_TEMPLATE__"));
+  const preloadFilePath = createMemo(() => isRealNode() && node ? join(node.path, ".preload.js") : "");
 
   const [preloadContent, setPreloadContent] = createSignal("");
   const [preloadLoaded, setPreloadLoaded] = createSignal(false);
 
   // Load preload content - runs whenever preloadFilePath changes or file cache updates
   createEffect(() => {
-    if (!preloadFilePath) {
+    if (!preloadFilePath()) {
       setPreloadContent("");
       setPreloadLoaded(true); // No preload file, so we're "loaded"
       return;
     }
-    
+
     setPreloadLoaded(false); // Start loading
-    
+
     const loadPreloadContent = async () => {
       // Always try to read the file directly first - this ensures we get the latest content
       try {
-        const { textContent } = await electrobun.rpc?.request.readFile({ path: preloadFilePath }) || {};
-        
+        const { textContent } = await electrobun.rpc?.request.readFile({ path: preloadFilePath() }) || {};
+
         if (textContent) {
           setPreloadContent(textContent);
           setPreloadLoaded(true);
@@ -442,28 +442,28 @@ console.log('Preload script loaded for:', window.location.href);
       } catch (err) {
         // File doesn't exist or can't be read, ignore error
       }
-      
+
       // Fallback: check if we have cached content
-      const cachedNode = getNode(preloadFilePath);
-      
+      const cachedNode = getNode(preloadFilePath());
+
       if (cachedNode && cachedNode.type === "file" && cachedNode.persistedContent) {
         setPreloadContent(cachedNode.persistedContent);
       } else {
         setPreloadContent("");
       }
-      
+
       setPreloadLoaded(true);
     };
-    
+
     loadPreloadContent();
   });
   
   // Also watch for changes in the file cache for this specific preload file
   createEffect(() => {
-    if (!preloadFilePath) return;
-    
-    const cachedNode = getNode(preloadFilePath);
-    
+    if (!preloadFilePath()) return;
+
+    const cachedNode = getNode(preloadFilePath());
+
     if (cachedNode && cachedNode.type === "file" && cachedNode.persistedContent) {
       setPreloadContent(cachedNode.persistedContent);
     }
@@ -536,7 +536,7 @@ console.log('Preload script loaded for:', window.location.href);
             src={`views://assets/file-icons/browser-add-profile.svg`}
           />
         </button>
-        <button class="browser-btn" type="button" onClick={onClickDevTools}>
+        <button class="browser-btn" type="button" onClick={onCreatePreloadScript}>
           <img
             width="12"
             height="12"
@@ -650,7 +650,7 @@ console.log('Preload script loaded for:', window.location.href);
                 electrobun.rpc?.request
                   .getFaviconForUrl({ url: currentUrl })
                   .then((favicon) => {
-                    if (favicon && isRealNode && node) {
+                    if (favicon && isRealNode() && node) {
                       const slateConfigPath = join(node.path, ".colab.json");
                       electrobun.rpc?.request.readFile({ path: slateConfigPath })
                         .then((content) => {
@@ -709,7 +709,7 @@ console.log('Preload script loaded for:', window.location.href);
               .then((favicon) => {
                 if (favicon) {
                   // Update the tab's icon in the slate config if this is a real browser profile node
-                  if (isRealNode && node) {
+                  if (isRealNode() && node) {
                     const slateConfigPath = join(node.path, ".colab.json");
                     electrobun.rpc?.request.readFile({ path: slateConfigPath })
                       .then((content) => {

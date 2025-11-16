@@ -255,6 +255,9 @@ export interface AppState {
         targetPaneId: null | string;
         targetTabIndex: number;
         targetFolderPath: null | string;
+        targetTabId?: null | string;
+        isTemplate?: boolean;
+        templateId?: string;
       };
   isResizingPane: boolean;
   // todo: consider moving editors onto the tab object. since goToLine and goToUrl in tab, could just

@@ -83,6 +83,7 @@ import type {
 import {
   FindAllResultsTree,
   ProjectsTree,
+  TemplateNodes,
   getIconForNode,
   createContextMenuAction,
 } from "./FileTree";
@@ -114,7 +115,7 @@ import { WebSlate } from "./slates/WebSlate";
 import { Editor } from "./CodeEditor";
 
 // todo (yoav): download this somewhere and move them to files.ts or something
-const defaultWebFaviconUrl = () => `views://assets/file-icons/browser-profile.svg`;
+const defaultWebFaviconUrl = () => `views://assets/file-icons/bookmark.svg`;
 
 // Removed DEFAULT_HOME_URL - no longer needed without new tab button
 
@@ -1681,7 +1682,7 @@ const getIconForTab = (tab: TabType | undefined): string => {
 
   if (tab.path === "__COLAB_INTERNAL__/web") {
     // Return a default globe icon for web tabs
-    return "views://assets/file-icons/browser-profile.svg";
+    return "views://assets/file-icons/bookmark.svg";
   }
 
   if (tab.path) {
@@ -1776,10 +1777,10 @@ const PaneTab = ({
       .then((favicon: string) => {
         console.log("getFaviconForUrl returned:", favicon);
         // Only use the favicon if it's a valid URL that's different from our default
-        if (favicon && 
-            favicon !== "" && 
+        if (favicon &&
+            favicon !== "" &&
             favicon !== defaultIcon &&
-            !favicon.includes("browser-profile.svg")) {
+            !favicon.includes("bookmark.svg")) {
           console.log("Setting favicon to:", favicon);
           setIcon(favicon);
         } else {
@@ -3815,7 +3816,10 @@ const Sidebar = () => {
         {state.ui.filterFileTreeByFindAll ? (
           <FindAllResultsTree />
         ) : (
-          <ProjectsTree />
+          <>
+            <TemplateNodes />
+            <ProjectsTree />
+          </>
         )}
       </div>
     </div>

@@ -523,6 +523,10 @@ Electrobun.events.on("context-menu-clicked", (e) => {
   } else if (action === "clone_repo_to_folder") {
     const { workspaceId, windowId, nodePath } = data;
     broadcastToWindow(workspaceId, windowId, "addChildNode", { nodePath, nodeType: "repo" });
+  } else if (action === "copy_path_to_clipboard") {
+    const { workspaceId, windowId, nodePath } = data;
+    console.log("copy path to clipboard", nodePath);
+    broadcastToWindow(workspaceId, windowId, "copyToClipboard", { text: nodePath });
   } else if (action === "open_node_in_finder") {
     const { nodePath } = data;
     console.log("open node in folder", nodePath);

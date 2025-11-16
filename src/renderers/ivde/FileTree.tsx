@@ -196,6 +196,232 @@ const CategoryRow = ({ label }: { label: string }) => {
   );
 };
 
+// Template node definitions for quick access
+const TEMPLATE_NODES = [
+  {
+    id: "browser",
+    name: "Browser",
+    path: "__COLAB_TEMPLATE__/browser",
+    icon: "views://assets/file-icons/bookmark.svg",
+  },
+  {
+    id: "terminal",
+    name: "Terminal",
+    path: "__COLAB_TEMPLATE__/terminal",
+    icon: "views://assets/file-icons/terminal.svg",
+  },
+  {
+    id: "agent",
+    name: "AI Chat",
+    path: "__COLAB_TEMPLATE__/agent",
+    icon: "views://assets/file-icons/agent.svg",
+  },
+] as const;
+
+const TemplateNodeItem = ({ template }: { template: typeof TEMPLATE_NODES[number] }) => {
+  const [isHovered, setIsHovered] = createSignal(false);
+
+  const handleDragStart = (e: DragEvent) => {
+    e.stopPropagation();
+    // Set dragState compatible with existing pane drop logic
+    setState("dragState", {
+      type: "node",
+      nodePath: template.path,
+      isTemplate: true,
+      templateId: template.id,
+    });
+  };
+
+  const handleDragEnd = async (e: DragEvent) => {
+    e.stopPropagation();
+
+    if (!state.dragState) {
+      return;
+    }
+
+    const { targetPaneId, targetTabIndex, targetFolderPath, templateId } = state.dragState;
+
+    // Handle drop onto pane (opens ephemeral tab)
+    if (targetPaneId) {
+      setState(
+        produce((_state: AppState) => {
+          const win = getWindow(_state);
+          if (win) {
+            win.currentPaneId = targetPaneId;
+          }
+        })
+      );
+
+      if (template.id === "terminal") {
+        const homeDir = state.paths?.COLAB_HOME_FOLDER || undefined;
+        openNewTerminalTab(homeDir, {
+          targetPaneId,
+          targetTabIndex,
+        });
+      } else {
+        openNewTabForNode(template.path, false, {
+          targetPaneId,
+          targetTabIndex,
+        });
+      }
+
+      setState("dragState", null);
+      return;
+    }
+
+    // Handle drop onto folder (creates persistent node)
+    if (targetFolderPath && templateId) {
+      setNodeExpanded(targetFolderPath, true);
+
+      if (templateId === "terminal") {
+        // Get the target node to determine if it's a file or folder
+        const targetNode = getNode(targetFolderPath);
+        let terminalCwd = targetFolderPath;
+
+        // If dropped on a file, use its parent directory
+        if (targetNode?.type === "file") {
+          const pathParts = targetFolderPath.split("/");
+          pathParts.pop();
+          terminalCwd = pathParts.join("/");
+        }
+
+        // Open terminal at the target location in the active pane
+        openNewTerminalTab(terminalCwd);
+      } else if (templateId === "browser") {
+        const baseName = "Browser";
+        const uniqueName = await electrobun.rpc?.request.getUniqueNewName({
+          parentPath: targetFolderPath,
+          baseName,
+        });
+        const browserProfilePath = join(targetFolderPath, uniqueName);
+
+        await electrobun.rpc?.request.mkdir({ path: browserProfilePath });
+
+        const slateConfig = {
+          v: 1,
+          name: uniqueName,
+          type: "web",
+          url: "https://blackboard.sh",
+          icon: "views://assets/file-icons/bookmark.svg",
+          config: {},
+        };
+
+        const slateConfigPath = join(browserProfilePath, ".colab.json");
+        await electrobun.rpc?.request.writeFile({
+          path: slateConfigPath,
+          value: JSON.stringify(slateConfig, null, 2),
+        });
+
+        openNewTabForNode(browserProfilePath, false, { focusNewTab: true });
+      } else if (templateId === "agent") {
+        const baseName = "AI Chat";
+        const uniqueName = await electrobun.rpc?.request.getUniqueNewName({
+          parentPath: targetFolderPath,
+          baseName,
+        });
+        const agentPath = join(targetFolderPath, uniqueName);
+
+        await electrobun.rpc?.request.mkdir({ path: agentPath });
+
+        const slateConfig = {
+          v: 1,
+          name: uniqueName,
+          type: "agent",
+          icon: "views://assets/file-icons/agent.svg",
+          config: {},
+        };
+
+        const slateConfigPath = join(agentPath, ".colab.json");
+        await electrobun.rpc?.request.writeFile({
+          path: slateConfigPath,
+          value: JSON.stringify(slateConfig, null, 2),
+        });
+
+        openNewTabForNode(agentPath, false, { focusNewTab: true });
+      }
+    }
+
+    setState("dragState", null);
+  };
+
+  const openTemplate = () => {
+    // Handle different template types appropriately
+    if (template.id === "terminal") {
+      // Use home directory if available, otherwise fall back to current directory
+      const homeDir = state.paths?.COLAB_HOME_FOLDER || undefined;
+      openNewTerminalTab(homeDir);
+    } else {
+      // For browser, agent, and file templates, use the standard tab opener
+      openNewTabForNode(template.path, false, { focusNewTab: true });
+    }
+  };
+
+  const handleDoubleClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    openTemplate();
+  };
+
+  const handleClick = (e: MouseEvent) => {
+    // Single click also opens ephemeral tab
+    if (e.detail === 1) {
+      openTemplate();
+    }
+  };
+
+  return (
+    <div
+      draggable={true}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onClick={handleClick}
+      onDblClick={handleDoubleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        display: "flex",
+        "align-items": "center",
+        padding: "4px 8px 4px 16px",
+        cursor: "pointer",
+        background: isHovered() ? "rgba(0, 0, 0, 0.1)" : "transparent",
+        "user-select": "none",
+        margin: "2px 8px",
+        "border-radius": "4px",
+      }}
+    >
+      <img
+        src={template.icon}
+        style={{
+          width: "16px",
+          height: "16px",
+          "margin-right": "8px",
+        }}
+      />
+      <span
+        style={{
+          "font-size": "13px",
+          color: "#333",
+          "font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        }}
+      >
+        {template.name}
+      </span>
+    </div>
+  );
+};
+
+export const TemplateNodes = () => {
+  return (
+    <>
+      <CategoryRow label="Quick Access" />
+      <div style={{ "margin-bottom": "12px" }}>
+        <For each={TEMPLATE_NODES}>
+          {(template) => <TemplateNodeItem template={template} />}
+        </For>
+      </div>
+    </>
+  );
+};
+
 export const ProjectsTree = () => {
   const projectsAsArray = () => {
     return Object.values(state.projects);
@@ -865,6 +1091,13 @@ const NodeName = ({
             }),
           },
 
+          {
+            label: "Copy Path to Clipboard",
+            ...createContextMenuAction("copy_path_to_clipboard", {
+              nodePath: _nodeToRender.path,
+            }),
+          },
+
           // should show what settings "type" it is
           {
             label: "Show Node Settings",
@@ -873,7 +1106,7 @@ const NodeName = ({
               nodePath: _nodeToRender.path,
             }),
           },
-          
+
           { type: "separator", visible: Boolean(openTabs.length) },
           // Add different node types for folders
           {
@@ -1108,6 +1341,7 @@ const NodeName = ({
         });
       }}
       onDragOver={(e) => {
+        e.preventDefault(); // Required to allow drop
         const _node = nodeToRender();
 
         const dragState = state.dragState;
@@ -1116,12 +1350,15 @@ const NodeName = ({
             "drag over",
             _node.type === "dir",
             dragState.nodePath !== _node.path,
-            !isDescendantPath(dragState.nodePath, _node.path)
+            dragState.isTemplate ? "template (skip descendant check)" : !isDescendantPath(dragState.nodePath, _node.path)
           );
           if (_node.type === "dir") {
+            // Template nodes can never be descendants of real folders, so skip the check
+            const isNotDescendant = dragState.isTemplate || !isDescendantPath(dragState.nodePath, _node.path);
+
             if (
               dragState.nodePath !== _node.path &&
-              !isDescendantPath(dragState.nodePath, _node.path)
+              isNotDescendant
             ) {
               setState(
                 produce((_state: AppState) => {

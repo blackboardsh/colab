@@ -418,7 +418,7 @@ const rpc = Electroview.defineRPC<WorkspaceRPC>({
       createSpecialFile: async ({ nodePath, fileType }) => {
         let fileName = "";
         let defaultContent = "";
-        
+
         if (fileType === "preload") {
           fileName = ".preload.js";
           defaultContent = `// Preload script for this web browser profile
@@ -473,13 +473,13 @@ You are a helpful assistant with the following characteristics:
 *Edit this file to customize your agent's behavior and knowledge.*
 `;
         }
-        
+
         const filePath = join(nodePath, fileName);
-        
+
         try {
           // Check if file already exists
           const exists = await electrobun.rpc?.request.exists({ path: filePath });
-          
+
           let wasCreated = false;
           if (!exists) {
             // Create the file if it doesn't exist
@@ -489,7 +489,7 @@ You are a helpful assistant with the following characteristics:
             });
             wasCreated = true;
           }
-          
+
           // For preload files, expand the web node folder after creation and open the file
           if (fileType === "preload") {
             if (wasCreated) {
@@ -502,7 +502,7 @@ You are a helpful assistant with the following characteristics:
               // File already exists, expand immediately
               setNodeExpanded(nodePath, true);
             }
-            
+
             // Open the file in the current pane (not as a new tab, replace preview if needed)
             openNewTabForNode(filePath, false, { focusNewTab: true });
           } else {
@@ -512,6 +512,16 @@ You are a helpful assistant with the following characteristics:
         } catch (error) {
           console.error(`Error creating ${fileName}:`, error);
           alert(`Failed to create ${fileName}. Please try again.`);
+        }
+      },
+      copyToClipboard: async ({ text }: { text: string }) => {
+        try {
+          await navigator.clipboard.writeText(text);
+          console.log("Copied to clipboard:", text);
+        } catch (error) {
+          console.error("Failed to copy to clipboard:", error);
+          // Fallback: show the text in an alert so user can manually copy
+          alert(`Failed to copy automatically. Path:\n${text}`);
         }
       },
     },

@@ -42,6 +42,43 @@ export const _getNode = (
     };
   }
 
+  // Template nodes for quick access (browser, file, terminal, agent)
+  if (path.startsWith("__COLAB_TEMPLATE__")) {
+    // Check if we already have this template cached
+    if (_state.fileCache[path]) {
+      return _state.fileCache[path];
+    }
+
+    const templateId = path.split("/").pop() || "";
+    let templateNode: CachedFileType;
+
+    // Browser and agent templates are directory nodes with slates
+    if (templateId === "browser" || templateId === "agent") {
+      templateNode = {
+        name: templateId,
+        type: "dir",
+        path: path,
+        children: [],
+      };
+    }
+    // Terminal template (file node, but not actually opened as a file)
+    else {
+      templateNode = {
+        name: templateId,
+        type: "file",
+        path: path,
+        persistedContent: "",
+        isDirty: false,
+        model: null,
+        editors: {},
+      };
+    }
+
+    // Cache the template node so it returns the same reference
+    setState("fileCache", path, templateNode);
+    return templateNode;
+  }
+
   if (_state.fileCache[path]) {
     return _state.fileCache[path];
   }
@@ -81,11 +118,16 @@ export const getNode = (path?: string): CachedFileType | undefined => {
 
 // todo (yoav): rename to createOrFetchModel
 export const createModel = async (absolutePath: string) => {
-  const fileContents = await electrobun.rpc?.request.readFile({
-    path: absolutePath,
-  }); //?.slice(0, 1024 * 1024 * 2); //, "utf-8");
-
-  const { textContent: contents } = fileContents || { textContent: "" };
+  // Handle template file paths - they don't exist on disk, so provide empty content
+  let contents = "";
+  if (absolutePath.startsWith("__COLAB_TEMPLATE__")) {
+    contents = "";
+  } else {
+    const fileContents = await electrobun.rpc?.request.readFile({
+      path: absolutePath,
+    }); //?.slice(0, 1024 * 1024 * 2); //, "utf-8");
+    contents = fileContents?.textContent || "";
+  }
 
   const extension = absolutePath.split(".").pop() || "";
   const language = getExtensionLanguage(extension);

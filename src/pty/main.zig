@@ -155,11 +155,16 @@ fn spawnShell(shell: []const u8, cwd: []const u8, cols: u32, rows: u32) !void {
         // For now, let's skip the shell hooks and use a simpler approach
         // We'll implement CWD tracking differently
         
-        // Execute shell
+        // Execute shell as login shell to get full environment
         const shell_z = try allocator.dupeZ(u8, shell);
         defer allocator.free(shell_z);
-        
-        const args = [_:null]?[*:0]u8{ shell_z.ptr, null };
+
+        // Use -l flag to make it a login shell (sources profile files)
+        const login_flag = "-l";
+        const login_flag_z = try allocator.dupeZ(u8, login_flag);
+        defer allocator.free(login_flag_z);
+
+        const args = [_:null]?[*:0]u8{ shell_z.ptr, login_flag_z.ptr, null };
         _ = c.execvp(shell_z.ptr, &args);
         
         // If we get here, execvpe failed

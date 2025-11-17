@@ -669,10 +669,10 @@ const Update = () => {
     }
 
     if (isReady()) {
-      return `Update Installed: Relaunch now ${version} - ${updateInfo().hash}`;
+      return `Update Installed: Click to Restart ${version} - ${updateInfo().hash}`;
     }
 
-    return `Downloading Update ${version} - ${updateInfo().hash}`;
+    return `Installing Update ${version} - ${updateInfo().hash}`;
   };
 
   const buttonTitle = () => {
@@ -721,69 +721,3 @@ const Update = () => {
   );
 };
 
-const AppMenu = () => {
-  const openWebTab = (url: string) => {
-    openNewTabForNode("__COLAB_INTERNAL__/web", false, {
-      url,
-    });
-  };
-
-  return (
-    <div
-      style="font-size: 13px;margin: 8px 0px; margin-right: -2px; cursor: pointer;"
-      title="This is a beta version of co(lab)"
-      onClick={() => {
-        if (!state.ui.showAppMenu) {
-          setState("isResizingPane", true);
-          setTimeout(() => {
-            setState("ui", "showAppMenu", !state.ui.showAppMenu);
-          }, 100);
-        } else {
-          setState("ui", "showAppMenu", !state.ui.showAppMenu);
-          setState("isResizingPane", false);
-        }
-      }}
-    >
-      <img
-        class="app-menu-button"
-        style={{
-          height: "25px",
-          background: "#fefefe",
-          "border-radius": "4px",
-        }}
-        src="views://assets/colab-logo.png"
-      />
-
-      <div style="position:relative;">
-        <Show when={state.ui.showAppMenu}>
-          <div
-            class="app-menu webview-overlay"
-            style="font-weight: bold;border-radius: 4px; position: absolute; top: 8px; right: 6px;min-width:200px; text-align: right; border: 2px solid black; padding:2px; z-index: 2; background: #000"
-            onClick={() => setState("ui", "showAppMenu", false)}
-          >
-            <ul style="list-style: none;">
-              <li
-                style={{ cursor: "pointer" }}
-                onClick={() => openWebTab("https://colab.dev/docs")}
-              >
-                Docs
-              </li>
-              <li
-                style={{ cursor: "pointer" }}
-                onClick={() => openWebTab("https://colab.dev/changelog")}
-              >
-                Changelog
-              </li>
-              <li
-                style={{ cursor: "pointer" }}
-                onClick={() => openWebTab("https://discord.gg/ueKE4tjaCE")}
-              >
-                Join co(lab) Discord
-              </li>
-            </ul>
-          </div>
-        </Show>
-      </div>
-    </div>
-  );
-};

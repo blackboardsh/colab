@@ -55,26 +55,51 @@ export const WebSlate = ({
   node?: CachedFileType;
   tabId: string;
 }) => {
-  // console.log("webslate");
+  console.log("WebSlate component created:", { tabId, nodePath: node?.path });
   if (!node) {
+    console.error("WebSlate: No node provided for tabId:", tabId);
     return null;
   }
   const getNodeUrl = () => {
-    return getSlateForNode(node)?.url;
+    const slate = getSlateForNode(node);
+    // Ensure we return a valid URL or undefined (not an empty string or invalid value)
+    return slate?.type === "web" ? slate.url : undefined;
   };
   const tab = () => getWindow()?.tabs[tabId];
-  const _tab = tab();
 
-  const tabUrl = () => (_tab?.type === "web" ? _tab.url : "");
+  const tabUrl = () => {
+    const currentTab = tab();
+    return currentTab?.type === "web" && currentTab.url ? currentTab.url : undefined;
+  };
+
+  // Get the renderer setting from the slate config
+  const renderer = () => {
+    const slate = getSlateForNode(node);
+    if (slate?.type === "web" && slate.config && "renderer" in slate.config) {
+      return slate.config.renderer || "cef";
+    }
+    // Default to CEF for better compatibility
+    return "cef";
+  };
 
   // just get this once, so we have unidirectinoal flow on navigate -> update store
   // Note: initialUrl must be a valid url, otherwise webview will not initialize properly
   // and will throw. eg: when editing the url in the url bar there won't be a webcontents initialized
   const initialUrl = tabUrl() || getNodeUrl() || "https://www.google.com";
 
-  // use a different partition for each workspace by default
+  console.log("WebSlate init:", {
+    tabId,
+    nodePath: node?.path,
+    tabUrl: tabUrl(),
+    nodeUrl: getNodeUrl(),
+    initialUrl,
+    renderer: renderer(),
+  });
+
+  // use a different partition for each workspace and renderer type
+  // CEF and WebKit need separate partitions to avoid conflicts
   // todo (yoav): make this a util
-  const partition = `persist:sites:${state.workspace.id}`;
+  const partition = `persist:sites:${state.workspace.id}:${renderer()}`;
   // YYY - any was Electron.WebviewTag
   let webviewRef: any | undefined;
 
@@ -196,14 +221,18 @@ console.log('Preload script loaded for:', window.location.href);
   createEffect(async () => {
     // Note: wait for it to be ready, and wire reactivity to tabUrl
     // which is updated on did-navigate
-    if (isReady() && tabUrl()) {
+    const currentTabUrl = tabUrl();
+    console.log("WebSlate effect:", { tabId, isReady: isReady(), currentTabUrl });
+
+    if (isReady() && currentTabUrl) {
       // give it a second for cross language rpc to resolve before checking
 
       // Note: currently in-page-navigations don't trigger canGoBack/Forward
       // TODO: electrobun should likely account for this
       setIsBackDisabled(!(await webviewRef?.canGoBack()));
       setIsForwardDisabled(!(await webviewRef?.canGoForward()));
-      setWebviewUrl(tabUrl());
+      setWebviewUrl(currentTabUrl);
+      console.log("Set webviewUrl to:", currentTabUrl);
     } else {
       setIsBackDisabled(false);
       setIsForwardDisabled(false);
@@ -475,16 +504,6 @@ console.log('Preload script loaded for:', window.location.href);
     return colabPreloadScript + ";\n " + preloadContent();
   };
 
-  // Get the renderer setting from the slate config
-  const renderer = () => {
-    const slate = getSlateForNode(node);
-    if (slate?.type === "web" && slate.config?.renderer) {
-      return slate.config.renderer;
-    }
-    // Default to CEF for better compatibility
-    return "cef";
-  };
-
   return (
     <div style="display: flex; flex-direction: column; height: 100%">
       <div style="display: flex; box-sizing: border-box; gap: 5px; padding: 10px; min-height: 40px;height: 40px; width: 100%;overflow-x:hidden;">
@@ -698,26 +717,41 @@ console.log('Preload script loaded for:', window.location.href);
           // YYYY - DidNavigateEvent
           // @ts-ignore
           webviewRef.on("did-navigate", async (e: DidNavigateEvent) => {
-            console.log("did-navigate event:", e.detail);
-            
-            // Update URL immediately
+            console.log("did-navigate event:", e.detail, typeof e.detail);
+
+            // Validate that e.detail is a valid string URL before using it
+            if (!e.detail || typeof e.detail !== 'string' || e.detail.length < 1) {
+              console.warn("Invalid did-navigate event detail, ignoring:", e.detail);
+              return;
+            }
+
+            // Additional validation - try to construct URL to ensure it's valid
+            let validUrl: string;
+            try {
+              validUrl = new URL(e.detail).href;
+            } catch (err) {
+              console.warn("Invalid URL in did-navigate event, ignoring:", e.detail);
+              return;
+            }
+
+            // Update URL immediately with validated URL
             setState(
               produce((_state: AppState) => {
                 const _tab = getWindow(_state)?.tabs[tabId] as WebTabType;
-                _tab.url = e.detail;
+                _tab.url = validUrl;
                 // For now, extract hostname as title until we can get the real title
                 try {
-                  const url = new URL(e.detail);
+                  const url = new URL(validUrl);
                   _tab.title = url.hostname;
                 } catch (err) {
-                  _tab.title = e.detail;
+                  _tab.title = validUrl;
                 }
               })
             );
 
             // Fetch favicon for the new URL
             electrobun.rpc?.request
-              .getFaviconForUrl({ url: e.detail })
+              .getFaviconForUrl({ url: validUrl })
               .then((favicon) => {
                 if (favicon) {
                   // Update the tab's icon in the slate config if this is a real browser profile node

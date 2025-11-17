@@ -173,13 +173,25 @@ const fileSlates = {
 
 // Template slates - cached to maintain object reference for reactivity
 const templateSlates = {
-  browser: {
+  browserChromium: {
     v: 1,
-    name: "Browser",
+    name: "Chromium Tab",
     type: "web" as const,
     url: "https://blackboard.sh",
-    icon: "views://assets/file-icons/bookmark.svg",
-    config: {},
+    icon: "views://assets/file-icons/chrome-logo.svg",
+    config: {
+      renderer: "cef" as const,
+    },
+  },
+  browserWebKit: {
+    v: 1,
+    name: "WebKit Tab",
+    type: "web" as const,
+    url: "https://blackboard.sh",
+    icon: "views://assets/file-icons/webkit-logo.svg",
+    config: {
+      renderer: "system" as const,
+    },
   },
   agent: {
     v: 1,
@@ -222,14 +234,25 @@ export const getSlateForNode = (
 
   // Handle template nodes
   if (node.path.startsWith("__COLAB_TEMPLATE__")) {
-    if (node.path === "__COLAB_TEMPLATE__/browser") {
-      return templateSlates.browser;
+    // Extract template type from path (handles unique IDs like browser-chromium/abc123)
+    const pathParts = node.path.replace("__COLAB_TEMPLATE__/", "").split("/");
+    const templateType = pathParts[0]; // e.g., "browser-chromium" or "browser-webkit"
+
+    if (templateType === "browser-chromium") {
+      return templateSlates.browserChromium;
     }
-    if (node.path === "__COLAB_TEMPLATE__/terminal") {
+    if (templateType === "browser-webkit") {
+      return templateSlates.browserWebKit;
+    }
+    if (templateType === "browser") {
+      // Legacy browser template - default to Chromium
+      return templateSlates.browserChromium;
+    }
+    if (templateType === "terminal") {
       // Terminal tabs are handled differently - they don't use slates
       return undefined;
     }
-    if (node.path === "__COLAB_TEMPLATE__/agent") {
+    if (templateType === "agent") {
       return templateSlates.agent;
     }
     return;

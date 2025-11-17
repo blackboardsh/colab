@@ -199,10 +199,18 @@ const CategoryRow = ({ label }: { label: string }) => {
 // Template node definitions for quick access
 const TEMPLATE_NODES = [
   {
-    id: "browser",
-    name: "Browser",
-    path: "__COLAB_TEMPLATE__/browser",
-    icon: "views://assets/file-icons/bookmark.svg",
+    id: "browser-chromium",
+    name: "Chromium Tab",
+    path: "__COLAB_TEMPLATE__/browser-chromium",
+    icon: "views://assets/file-icons/chrome-logo.svg",
+    renderer: "cef" as const,
+  },
+  {
+    id: "browser-webkit",
+    name: "WebKit Tab",
+    path: "__COLAB_TEMPLATE__/browser-webkit",
+    icon: "views://assets/file-icons/webkit-logo.svg",
+    renderer: "system" as const,
   },
   {
     id: "terminal",
@@ -350,8 +358,14 @@ const TemplateNodeItem = ({ template }: { template: typeof TEMPLATE_NODES[number
       // Use home directory if available, otherwise fall back to current directory
       const homeDir = state.paths?.COLAB_HOME_FOLDER || undefined;
       openNewTerminalTab(homeDir);
+    } else if (template.id === "browser-chromium" || template.id === "browser-webkit") {
+      // For browser templates, create a unique internal path for each tab instance
+      // This prevents multiple tabs from sharing the same node/webview instance
+      const uniqueId = Math.random().toString(36).substring(2, 11);
+      const uniquePath = `${template.path}/${uniqueId}`;
+      openNewTabForNode(uniquePath, false, { focusNewTab: true });
     } else {
-      // For browser, agent, and file templates, use the standard tab opener
+      // For agent and other templates, use the standard tab opener
       openNewTabForNode(template.path, false, { focusNewTab: true });
     }
   };

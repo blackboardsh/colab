@@ -49,11 +49,13 @@ export const _getNode = (
       return _state.fileCache[path];
     }
 
-    const templateId = path.split("/").pop() || "";
+    // Extract the template type from the path (handles unique IDs like browser-chromium/abc123)
+    const pathParts = path.replace("__COLAB_TEMPLATE__/", "").split("/");
+    const templateId = pathParts[0]; // e.g., "browser-chromium" or "browser-webkit"
     let templateNode: CachedFileType;
 
     // Browser and agent templates are directory nodes with slates
-    if (templateId === "browser" || templateId === "agent") {
+    if (templateId === "browser" || templateId === "browser-chromium" || templateId === "browser-webkit" || templateId === "agent") {
       templateNode = {
         name: templateId,
         type: "dir",

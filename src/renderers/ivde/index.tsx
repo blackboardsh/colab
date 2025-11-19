@@ -2908,8 +2908,10 @@ const NodeSettings = () => {
 					name: "",
 					icon: defaultWebFaviconUrl(),
 					type: "web",
-					url: "",
-					config: {},
+					url: "https://duckduckgo.com",
+					config: {
+						renderer: "system" as const,
+					},
 				},
 			});
 			// setState("settingsPane", "data", "previewNode", );

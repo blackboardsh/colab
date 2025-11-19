@@ -2370,14 +2370,36 @@ export const GitSlate = ({ node }: { node?: CachedFileType }) => {
                                 "font-size": "12px",
                                 "font-family": "'Segoe UI', system-ui, sans-serif",
                                 color: "#cccccc",
+                                "min-width": 0, // Allow flex item to shrink
                               }}
                               onClick={() => onClickChange(filechange, commit.hash)}
                             >
                               <ChangeTypeSpan changeType={filechange.changeType} />
-                              <span style={{ color: "#858585", "margin-right": "4px" }}>
-                                {dirname ? dirname + "/" : ""}
+                              <span style={{
+                                display: "flex",
+                                "align-items": "center",
+                                "min-width": 0,
+                                flex: "1",
+                              }}>
+                                <span style={{
+                                  color: "#ffffff",
+                                  "white-space": "nowrap",
+                                }}>
+                                  {filename}
+                                </span>
+                                <Show when={dirname}>
+                                  <span style={{
+                                    color: "#858585",
+                                    "margin-left": "6px",
+                                    "white-space": "nowrap",
+                                    overflow: "hidden",
+                                    "text-overflow": "ellipsis",
+                                    "min-width": 0,
+                                  }}>
+                                    {dirname}
+                                  </span>
+                                </Show>
                               </span>
-                              <span>{filename}</span>
                             </div>
                           );
                         }}
@@ -3657,11 +3679,34 @@ const FileListItem = ({
           display: "flex",
           "align-items": "center",
           flex: "1",
+          "min-width": 0, // Allow flex item to shrink below content size
         }}
       >
         <ChangeTypeSpan changeType={change.changeType} />
-        <span style={{}}>
-          {change.relPath}
+        <span style={{
+          display: "flex",
+          "align-items": "center",
+          "min-width": 0, // Allow span to shrink
+          flex: "1",
+        }}>
+          <span style={{
+            color: "#ffffff",
+            "white-space": "nowrap",
+          }}>
+            {change.relPath.split('/').pop()}
+          </span>
+          <Show when={change.relPath.includes('/')}>
+            <span style={{
+              color: "#858585",
+              "margin-left": "6px",
+              "white-space": "nowrap",
+              overflow: "hidden",
+              "text-overflow": "ellipsis",
+              "min-width": 0,
+            }}>
+              {change.relPath.substring(0, change.relPath.lastIndexOf('/'))}
+            </span>
+          </Show>
         </span>
       </div>
       

@@ -2740,6 +2740,13 @@ const NodeSettings = () => {
     setSelectedGitHubBranch(branch || null); // Don't auto-set branch, let user click
     setShouldCreateMainBranch(isEmptyRepo || false);
 
+    // Update the folder name input with the repo name
+    if (inputNameRef) {
+      inputNameRef.value = repo.name;
+      // Trigger the onInput event to update validation and preview node name
+      onNameChange();
+    }
+
     // Update the git URL in the preview node config only when branch is explicitly selected
     if (branch) {
       const gitUrl = repo.clone_url;

@@ -1,6 +1,6 @@
 {
   "name": "colab",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "A hybrid browser + code editor for deep work",
   "main": "index.js",
   "scripts": {

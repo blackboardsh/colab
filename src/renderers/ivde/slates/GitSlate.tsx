@@ -1777,7 +1777,34 @@ export const GitSlate = ({ node }: { node?: CachedFileType }) => {
                           "margin-right": "8px",
                           "accent-color": "#0078d4",
                         }}
-                        onChange={(e) => setIsAmendChecked(e.currentTarget.checked)}
+                        onChange={(e) => {
+                          const checked = e.currentTarget.checked;
+                          setIsAmendChecked(checked);
+
+                          if (checked) {
+                            // Get the last local commit (not remote-only)
+                            const lastCommit = uiState.log?.find(c => !c.isRemoteOnly);
+                            if (lastCommit) {
+                              // Populate the form with the last commit's message
+                              const fullMessage = lastCommit.body
+                                ? `${lastCommit.message}\n\n${lastCommit.body}`
+                                : lastCommit.message;
+
+                              const lines = fullMessage.split('\n');
+                              const subject = lines[0];
+                              const description = lines.slice(1).join('\n').trim();
+
+                              setSubjectValue(subject);
+                              setSubjectLength(subject.length);
+                              setDescriptionValue(description);
+                            }
+                          } else {
+                            // Clear the form when unchecking amend
+                            setSubjectValue("");
+                            setSubjectLength(0);
+                            setDescriptionValue("");
+                          }
+                        }}
                       />
                       Amend previous commit
                     </label>

@@ -1,0 +1,23 @@
+#!/bin/bash
+# Sync script for colab
+
+set -e
+
+echo "=== Syncing colab ==="
+
+# Update swe/main from upstream
+git checkout swe/main 2>/dev/null || git branch swe/main origin/main
+
+git fetch upstream
+
+# Try FF-only first
+if git merge --ff-only upstream/main 2>/dev/null; then
+    echo "FF merge successful"
+else
+    echo "Non-FF merge required"
+    git merge --no-ff upstream/main -m "Merge upstream/main"
+fi
+
+git push origin swe/main
+echo "=== Done ==="
+git log --oneline -3

@@ -1,0 +1,5 @@
+# Configuration for the OpenSSF Scorecard workflow.
+# See: https://github.com/ossf/scorecard-action
+results_file: results.sarif
+results_format: sarif
+publish_results: true

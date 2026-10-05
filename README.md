@@ -1,118 +1,32 @@
-> [!NOTE]
-> We believe in shipping early and often.
-> Now that **we're using co(lab) to build all of Blackboard's projects internally including Electrobun and co(lab) itself** we decided to open source it and make the Developer Preview available for download for early feedback.
+# Co(lab) is now Dash
 
->[!IMPORTANT]
-> **Some of the listed features are in early development**, and our FTU and onboarding could use some love.
-> We invite the **brave** to download the developer preview as we prep for v1 and **give us feedback** on how co(lab) could best help you do your best deep work
+Co(lab) was Blackboard’s research preview for bringing a web browser, code editor, terminals, and Git into one place for deep work. That work became **Dash: a desktop workspace for you and your AI, across all your machines.**
 
+[**Explore Dash →**](https://blackboard.sh/dash/?utm_source=github&utm_medium=readme&utm_campaign=colab_to_dash)
 
-# Co(lab)
+Available in beta for **macOS, Windows, and Linux**. Free to start, with no account required for local use.
 
-A hybrid web browser + local code editor for deep work.
+## The workspace we were building toward
 
-## Demo
+Dash carries forward Co(lab)’s editor, terminals, customizable browser, and built-in Git GUI, with new ways to put your whole setup to work:
 
-[![Co(lab) Demo](https://img.youtube.com/vi/WWTCqGmE86w/maxresdefault.jpg)](https://www.youtube.com/watch?v=WWTCqGmE86w)
+- **Pick up your work on another machine.** Reach files, terminals, and Git on your connected computers from Dash Desktop or a web browser, including your phone.
+- **Bring your coding agents.** Run Codex, Claude Code, or other terminal-based agents where your project lives. Open the same running session from another device.
+- **Run models on hardware you own.** Download supported open weight models and give them access to the machines and projects you authorize.
+- **Connect your AI to your tools.** Give compatible assistants access to files, terminals, and projects through Local MCP or hosted Relay MCP.
+- **Make the web fit your workflow.** Save websites with custom preload scripts to remove distractions or customize their appearance, then reopen them alongside your code in Dash Desktop.
 
-**Co(lab)** combines a powerful code editor with an integrated browser. At Blackboard Technologies we think about startups night and day. Co(lab) is our flagship product, built with [Electrobun](https://github.com/blackboardsh/electrobun), and we hope to make it the ultimate startup building environment.
+Connections between Dash clients are end-to-end encrypted, including through Dash Relay.
 
-## Features
+## About this repository
 
-- **Unified Development Environment**: Local code editor powered by Monaco and Bun combined with a tinkerer's web browser in the same window, multi-tab, multi-pane.
-- **Web Browser**: Open Chromium or Webkit tabs. Isolate your online accounts in their own workspaces. Smart bookmarks and easy to edit preload scripts for customizing your browsing experience.
-- **A new way to folder**: Files and Folders are a primary concept. Arrange projects, notes, git repos, and bookmarks the way you actually use them.
-- **Git Integration**: Visual git interface with staging, commits, and branch management
-- **Plugin Architecture**: Extensible system for custom functionality for the ultimate browsing, coding, and tightly integrated workflows.
-- **Privacy-First Analytics**: Optional, opt-in analytics.
+Co(lab) is no longer maintained. This repository preserves the research preview under its original [MIT license](LICENSE). Dash is a separate, proprietary product built with open-source tools, including [Electrobun](https://blackboard.sh/electrobun/), [Cottontail](https://github.com/blackboardsh/cottontail), and [Warren](https://framework.blackboard.sh/electrobun/guides/electrobun-ui/).
 
-## Installation
+Thanks to everyone who tried Co(lab), shared feedback, starred the project, or built on it. You helped shape what came next.
 
-### Download
+<details>
+<summary>Watch the original Co(lab) research preview</summary>
 
-Visit [blackboard.sh/colab/](https://blackboard.sh/colab/) to download the latest release for your platform. (Currently shipping Mac ARM only).
+![Co(lab) research preview](https://img.youtube.com/vi/WWTCqGmE86w/maxresdefault.jpg)
 
-### Build from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/blackboardsh/colab.git
-cd colab
-
-# Install dependencies
-bun install
-
-# Build and run
-bun run dev
-```
-
-## Development
-
-Co(lab) is built with [Electrobun](https://github.com/blackboardsh/electrobun), a modern alternative to Electron.
-
-### Prerequisites
-
-- Node.js 18+
-- Bun runtime
-
-### Development Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build:stable
-```
-
-### Project Structure
-
-- `src/main/` - Main process code
-- `src/renderers/` - Renderer process UI
-- `src/shared/` - Shared utilities and types
-- `scripts/` - Build and deployment scripts
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Areas for Contribution
-
-- Plugin development and architecture
-- UI/UX improvements
-- Performance optimizations
-- Documentation and examples
-- Testing and quality assurance
-
-## Roadmap
-
-- **Plugin Ecosystem**: Extensible architecture for community plugins
-- **Cloud Sync**: Optional settings and project synchronization
-- **Team Collaboration**: Real-time collaborative editing features
-- **AI Integration**: Code completion and assistance features
-
-## Technology
-
-Co(lab) is powered by:
-
-- **[Electrobun](https://github.com/blackboardsh/electrobun)**: Modern desktop app framework
-- **[SolidJS](https://solidjs.com)**: Reactive UI library
-- **[Monaco Editor](https://microsoft.github.io/monaco-editor/)**: VS Code's editor engine
-- **[TypeScript](https://typescriptlang.org)**: Type-safe development
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Support
-
-- **Website**: [blackboard.sh/colab/](https://blackboard.sh/colab/)
-- **Issues**: [GitHub Issues](https://github.com/blackboardsh/colab/issues)
-- **Discussion**: [Discord](https://discord.gg/ueKE4tjaCE)
-
----
-
-**Co(lab)** is developed by [Blackboard Technologies Inc.](https://blackboard.sh)
+</details>

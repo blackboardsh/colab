@@ -177,22 +177,20 @@ export const TopBar = () => {
         </div>
       </div>
 
-      {/* Colab Cloud button */}
-      <div
-        style="font-size: 13px; margin: 8px 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; background: #2d4a3e; border-radius: 4px; padding: 2px 8px;"
-        title="Open Colab Cloud settings"
+      {/* Dash announcement */}
+      <button
+        type="button"
+        style="font-family: inherit; font-size: 12px; font-weight: 500; margin: 8px 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; background: #172f4a; color: #7dd3fc; border: 1px solid #285477; border-radius: 4px; padding: 2px 8px; white-space: nowrap; flex-shrink: 0;"
+        title="Open the Dash website in your default browser"
         onClick={() => {
-          setState("settingsPane", {
-            type: state.settingsPane.type === "colab-cloud-settings" ? "" : "colab-cloud-settings",
-            data: {},
-          });
+          electrobun.rpc?.send.openDashWebsite();
         }}
       >
-        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2">
-          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+        <span>Colab is now Dash</span>
+        <svg aria-hidden="true" style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M7 17 17 7M7 7h10v10"></path>
         </svg>
-        <span style="color: #4ade80; font-weight: 500; font-size: 12px;">Cloud</span>
-      </div>
+      </button>
 
       {/* Colab button */}
       <div

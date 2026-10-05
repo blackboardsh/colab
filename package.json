@@ -5,8 +5,8 @@
 	"main": "index.js",
 	"scripts": {
 		"setup": "bun run scripts/setup-deps.ts",
-		"build:dev": "bun setup && electrobun build",
-		"dev": "bun setup && electrobun dev",
+		"build:dev": "bun install --frozen-lockfile && bun setup && electrobun build",
+		"dev": "bun install --frozen-lockfile && bun setup && electrobun dev",
 		"build:canary": "electrobun build --env=canary",
 		"build:stable": "electrobun build --env=stable",
 		"docs:dev": "cd documentation && bun install && bun start",

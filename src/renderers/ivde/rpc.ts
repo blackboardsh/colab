@@ -934,6 +934,7 @@ export type WorkspaceRPC = {
         offset?: { x: number; y: number };
       } | void;
       closeWindow: void;
+      openDashWebsite: void;
       openBunnyWindow: {
         screenX: number;
         screenY: number;

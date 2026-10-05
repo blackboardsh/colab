@@ -2862,6 +2862,11 @@ const createWindow = (
 				closeWindow: () => {
 					mainWindow.close();
 				},
+				openDashWebsite: () => {
+					if (!Utils.openExternal("https://blackboard.sh/dash/?utm_source=colab&utm_medium=app&utm_campaign=colab_to_dash")) {
+						console.error("Could not open the Dash website in the default browser.");
+					}
+				},
 				openBunnyWindow: ({ screenX, screenY }) => {
 					openBunnyWindow(screenX, screenY);
 				},

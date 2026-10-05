@@ -13,6 +13,9 @@ const {ELECTROBUN_BUILD_DIR, ELECTROBUN_APP_NAME} = process.env;
 
 const APP_BUNDLE_FOLDER = path.join(ELECTROBUN_BUILD_DIR, `${ELECTROBUN_APP_NAME}.app`);
 
+// Same artwork as icon.iconset, precompiled for builds where iconutil is unavailable.
+cpSync("./assets/colab.icns", path.join(APP_BUNDLE_FOLDER, "Contents", "Resources", "AppIcon.icns"));
+
 // Analytics build configuration
 const getBuildAnalyticsConfig = () => {
   // Single Mixpanel token - only use if explicitly provided

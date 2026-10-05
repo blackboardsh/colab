@@ -28,6 +28,8 @@ export default {
             "assets/bunny.png": "views/bunny/assets/bunny.png"
         },
         "mac": {
+            // postBuild copies the compiled icon so builds don't depend on iconutil.
+            "icons": "",
             "codesign": true,
             "notarize": true,
             "bundleCEF": false,
@@ -44,7 +46,8 @@ export default {
         exitOnLastWindowClosed: false
     },
     "scripts": {
-        "postBuild": "./scripts/postBuild.ts"
+        "postBuild": "./scripts/postBuild.ts",
+        "postPackage": "./scripts/sign-dev.ts"
     },
     "release": {
         "baseUrl": "https://colab-releases.blackboard.sh/"
